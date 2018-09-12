@@ -27,13 +27,20 @@ public class TCPServer {
 		whitelist = new HashSet<InetAddress>(); // Automatically hashes for you (?)
 		whitelist.add(server.getInetAddress()); // I think we just added our own servers IP to our own white list.
 		
+		int i = 1; // To keep track of the threads created.
+		Thread t[] = new Thread[10];
+		
 		while (file.exists()) {
 			Socket client = server.accept(); // A socket is an end-point for communication between two machines.
 
 			log.println((new Date()).toString() + "| Connection |" + client.getInetAddress());
 
-			Worker worker = new Worker(client, this);
-			worker.handle();
+			//Worker worker = new Worker(client, this);
+			//worker.handle();
+			
+			t[i] = new Thread(new Worker(client, this));
+			t[i].start();
+			i++;
 			
 			log.println((new Date()).toString()+ "| Disconnected |" + client.getInetAddress());
 		}

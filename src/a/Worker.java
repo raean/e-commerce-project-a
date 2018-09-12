@@ -7,17 +7,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Worker {
+public class Worker implements Runnable {
 	
 	private Socket client;
 	private TCPServer server;
@@ -43,20 +45,25 @@ public class Worker {
 		bw = new BufferedWriter(osw);
 		
 		String message = "";
-		while (!message.equals("Bye")) {
+		while (!message.matches("[bB][yY][eE]")) {
 			message = br.readLine();
-			System.out.println("Processing the request: " + message + "\n");
+			System.out.println("Processing the request: " + message);
 			String response;
 			
-			if (message.equals("getTime")) {
+			if (message.matches("[gG][eE][tT][tT][iI][mM][eE]")) {
 				response = this.getTime();
 				bw.write(response + "\n");
 				bw.flush();
-			} else if (message.equals("Bye")) {
+			} else if (message.matches("[bB][yY][eE]")) {
 				response = "Goodbye!\n";
 				bw.write(response);
 				bw.flush();
 				this.Bye();
+			} else if (message.matches("[Pp][Rr][Ii][Mm][Ee]\\s[0-9]*[1-9]+")) {
+				//bw.write("Finding your prime number..." + "\n");
+				long primeNumber = this.Prime(message.substring(6));
+				bw.write(primeNumber + "\n");
+				bw.flush();
 			} else if (message.matches("Punch\\s([0-2]?[0-5]?[0-5])\\.([0-2]?[0-5]?[0-5])\\.([0-2]?[0-5]?[0-5])\\.([0-2]?[0-5]?[0-5])")) {
 				response = "Adding IP: " + message.substring(6) + " to the whitelist.\n";
 				bw.write(response);
@@ -88,7 +95,7 @@ public class Worker {
 	 * M2
 	 */
 	private void Bye() throws Exception {
-		client.close();
+		//client.close();
 	}
 	
 	/*
@@ -128,6 +135,25 @@ public class Worker {
         	bw.write(response);
 			bw.flush();
         }
+	}
+	
+	/*
+	 * M5
+	 */
+	private long Prime(String substring) {
+		long primeNumber  = BigInteger.probablePrime((int) Math.pow(2,Integer.parseInt(substring)), new Random()).intValue();
+		return primeNumber;
+	}
+
+
+	@Override
+	public void run() {
+		try {
+			this.handle();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 
